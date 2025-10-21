@@ -1,0 +1,39 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+*.log
+*.blend1
+sysinfo.txt
+mono_crash.*
+*.apk
+*.aab
+*.unitypackage
+*.app
+.vs/
+.gradle/
+ExportedObj/
+*.csproj
+*.sln
+*.user
+*.pidb
+*.pdb
+*.mdb
+*.unitypackage
+# Visual Scripting auto-generated files
+/[Aa]ssets/Unity.VisualScripting.Generated/
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+env/
+*.sqlite3
+*.log
+.DS_Store
