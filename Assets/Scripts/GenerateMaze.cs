@@ -10,7 +10,7 @@ public class GenerateMaze : MonoBehaviour
 {
     [SerializeField]
     GameObject roomPrefab;
-    
+
     [SerializeField]
     GameObject playerPrefab;
 
@@ -240,6 +240,12 @@ public class GenerateMaze : MonoBehaviour
     {
         if (generating) return;
 
+        // Destroy old player if exists
+        if (player != null && player.gameObject != null)
+        {
+            Destroy(player.gameObject);
+        }
+
         Reset();
 
         RemoveRoomWall(0, 0, Room.Directions.BOTTOM);
@@ -263,12 +269,10 @@ public class GenerateMaze : MonoBehaviour
 
         generating = false;
 
-        // ? Spawn player at entrance (bottom-left)
         Vector3 spawnPos = new Vector3(rooms[0, 0].transform.position.x, rooms[0, 0].transform.position.y, -1f);
         GameObject p = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
         player = p.GetComponent<PlayerBehaviour>();
 
-        // Pass references
         player.Init(rooms, 0, 0);
     }
 
