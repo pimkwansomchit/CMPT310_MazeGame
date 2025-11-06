@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Room : MonoBehaviour
 {
+
     public enum Directions
     {
         TOP,
@@ -33,8 +34,9 @@ public class Room : MonoBehaviour
 
     public bool visited { get; set; } = false;
 
-    Dictionary<Directions, bool> dirflags =
-        new Dictionary<Directions, bool>();
+    public Dictionary<Directions, bool> dirflags { get; private set; }
+        = new Dictionary<Directions, bool>();
+
 
     private void Start()
     {

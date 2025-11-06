@@ -10,6 +10,11 @@ public class GenerateMaze : MonoBehaviour
 {
     [SerializeField]
     GameObject roomPrefab;
+    
+    [SerializeField]
+    GameObject playerPrefab;
+
+    private PlayerBehaviour player;
 
     // The grid.
     Room[,] rooms = null;
@@ -238,13 +243,13 @@ public class GenerateMaze : MonoBehaviour
         Reset();
 
         RemoveRoomWall(0, 0, Room.Directions.BOTTOM);
-
         RemoveRoomWall(numX - 1, numY - 1, Room.Directions.RIGHT);
 
         stack.Push(rooms[0, 0]);
 
         StartCoroutine(Coroutine_Generate());
     }
+
 
     IEnumerator Coroutine_Generate()
     {
@@ -257,7 +262,16 @@ public class GenerateMaze : MonoBehaviour
         }
 
         generating = false;
+
+        // ? Spawn player at entrance (bottom-left)
+        Vector3 spawnPos = new Vector3(rooms[0, 0].transform.position.x, rooms[0, 0].transform.position.y, -1f);
+        GameObject p = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+        player = p.GetComponent<PlayerBehaviour>();
+
+        // Pass references
+        player.Init(rooms, 0, 0);
     }
+
 
     private void Reset()
     {

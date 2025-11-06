@@ -5,10 +5,11 @@ public class PlayerBehaviour : MonoBehaviour
     public float moveSpeed = 5f;
     public int gridX;
     public int gridY;
-    public int[,] maze;
+    public Room[,] rooms;
 
     private bool isMoving = false;
     private Vector3 targetPosition;
+
     void Start()
     {
         targetPosition = transform.position;
@@ -16,7 +17,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Update()
     {
-        // move smoothly
+        if (rooms == null) return;
+
+        // smooth movement
         if (isMoving)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
@@ -30,49 +33,71 @@ public class PlayerBehaviour : MonoBehaviour
         // handle user input
         int x = 0;
         int y = 0;
+
         if (Input.GetKeyDown(KeyCode.W))
         {
             y = 1;
         }
-        else if (Input.GetKeyDown(KeyCode.A))
-        {
-            x = -1;
-        }
         else if (Input.GetKeyDown(KeyCode.S))
         {
             y = -1;
+        }
+        else if (Input.GetKeyDown(KeyCode.A))
+        {
+            x = -1;
         }
         else if (Input.GetKeyDown(KeyCode.D))
         {
             x = 1;
         }
 
-        // update position
         int newX = gridX + x;
         int newY = gridY + y;
 
-        if (isValidMove(newX, newY))
+        if (isValidMove(newX, newY, x, y))
         {
             gridX = newX;
             gridY = newY;
-            targetPosition = new Vector3(gridX, 0, gridY);
+            targetPosition = rooms[gridX, gridY].transform.position;
             isMoving = true;
         }
+    }
 
-    }   
-    
-    bool isValidMove(int x, int y)
+    bool isValidMove(int x, int y, int dx, int dy)
     {
         // bounds check
-        if (x < 0 || y < 0 || x >= maze.GetLength(0) || y >= maze.GetLength(1)) {
+        if (x < 0 || y < 0 || x >= rooms.GetLength(0) || y >= rooms.GetLength(1))
+        {
             return false;
         }
 
-        // check if wall
-        if (maze[x, y] == 1) {
+        // direction check (walls)
+        Room.Directions dir = Room.Directions.NONE;
+
+        if (dx == 1) dir = Room.Directions.RIGHT;
+        else if (dx == -1) dir = Room.Directions.LEFT;
+        else if (dy == 1) dir = Room.Directions.TOP;
+        else if (dy == -1) dir = Room.Directions.BOTTOM;
+
+        if (dir == Room.Directions.NONE)
+        {
+            return false;
+        }
+
+        // check if wall blocks movement
+        if (rooms[gridX, gridY].dirflags[dir])
+        {
             return false;
         }
 
         return true;
+    }
+
+    public void Init(Room[,] rooms, int startX, int startY)
+    {
+        this.rooms = rooms;
+        this.gridX = startX;
+        this.gridY = startY;
+        targetPosition = transform.position;
     }
 }
