@@ -14,6 +14,11 @@ public class GenerateMaze : MonoBehaviour
     [SerializeField]
     GameObject playerPrefab;
 
+    [SerializeField]
+    GameObject AIPrefab;
+
+    private GameObject aiObject;
+
     private PlayerBehaviour player;
 
     // The grid.
@@ -274,6 +279,17 @@ public class GenerateMaze : MonoBehaviour
         player = p.GetComponent<PlayerBehaviour>();
 
         player.Init(rooms, 0, 0);
+
+        //
+
+        // if (aiObject!= null){
+        //     Destroy(aiObject);
+        // }
+        Vector2Int aiStart = new Vector2Int(0,numY-1);
+        Vector3 aiPosition = rooms[aiStart.x, aiStart.y].transform.position;
+        aiObject = Instantiate(AIPrefab, aiPosition, Quaternion.identity);
+        AIBehaviour ai = aiObject.GetComponent<AIBehaviour>();
+        ai.Init(rooms, aiStart.x, aiStart.y);
     }
 
 
@@ -300,6 +316,12 @@ public class GenerateMaze : MonoBehaviour
             {
                 CreateMaze();
             }
+
+            
+        if (aiObject!= null){
+            Destroy(aiObject);
+        }
+
         }
     }
 }
