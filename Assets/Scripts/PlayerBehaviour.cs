@@ -60,6 +60,7 @@ public class PlayerBehaviour : MonoBehaviour
             gridY = newY;
             targetPosition = rooms[gridX, gridY].transform.position;
             isMoving = true;
+            UnityEngine.Object.FindFirstObjectByType< RLBehaviour>()?.NotifyPlayerMoved();
         }
     }
 
