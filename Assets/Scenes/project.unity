@@ -497,6 +497,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GenerateMaze
   roomPrefab: {fileID: 8825723278439971564, guid: ed0fca3fdb89faa409fd28a2f4218361, type: 3}
   playerPrefab: {fileID: 8504917974782399396, guid: b4670532fe80ab94a80ab028964b843e, type: 3}
+  AIPrefab: {fileID: 5210349372296813284, guid: 90675f16582808948aa2bc8ba9041d44, type: 3}
   numX: 10
   numY: 10
 --- !u!4 &1360393787
