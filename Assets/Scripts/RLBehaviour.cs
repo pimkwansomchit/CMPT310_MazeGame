@@ -8,6 +8,8 @@ public class RLBehaviour : MonoBehaviour
     public float moveSpeed = 5f;
     public int gridX;
     public int gridY;
+    public int exitX;
+    public int exitY;
     public Room[,] rooms;
 
     private Vector3 targetPos;
@@ -16,19 +18,24 @@ public class RLBehaviour : MonoBehaviour
     // Q-Learning hyperparameters
     private float learningRate = 0.1f;
     private float discount = 0.95f;
-    private float epsilon = 0.2f;   // exploration rate
+    private float epsilon = 0.2f;
+    private float minEpsilon = 0.05f;
+    private float epsilonDecay = 0.999f;
 
     // Q-Table
-    private Dictionary<(int, int, int, int), float[]> Q
-        = new Dictionary<(int, int, int, int), float[]>();
+    private Dictionary<(int, int, int, int, int, int), float[]> Q
+        = new Dictionary<(int, int, int, int, int, int), float[]>();
 
     private PlayerBehaviour player;
 
-    public void Init(Room[,] rooms, int startX, int startY)
+    public void Init(Room[,] rooms, int startX, int startY, int exitX, int exitY)
     {
         this.rooms = rooms;
         this.gridX = startX;
         this.gridY = startY;
+        this.exitX = exitX;
+        this.exitY = exitY;
+
         targetPos = transform.position;
 
         player = UnityEngine.Object.FindFirstObjectByType<PlayerBehaviour>();
@@ -79,9 +86,9 @@ public class RLBehaviour : MonoBehaviour
         (int nx, int ny, bool valid) = ComputeMove(action);
 
         // calculate reward
-        float reward = ComputeReward(nx, ny);
+        float reward = ComputeReward(nx, ny, valid);
 
-        var nextState = (player.gridX, player.gridY, nx, ny);
+        var nextState = (player.gridX, player.gridY, nx, ny, exitX, exitY);
 
         if (!Q.ContainsKey(nextState))
             Q[nextState] = new float[4];
@@ -100,14 +107,17 @@ public class RLBehaviour : MonoBehaviour
             targetPos = rooms[nx, ny].transform.position;
             isMoving = true;
         }
+
+        // decay exploration
+        epsilon = Mathf.Max(minEpsilon, epsilon * epsilonDecay);
     }
 
-    (int, int, int, int) GetState()
+    (int, int, int, int, int, int) GetState()
     {
-        return (player.gridX, player.gridY, gridX, gridY);
+        return (player.gridX, player.gridY, gridX, gridY, exitX, exitY);
     }
 
-    int ChooseAction((int, int, int, int) state)
+    int ChooseAction((int, int, int, int, int, int) state)
     {
         if (UnityEngine.Random.value < epsilon)
             return UnityEngine.Random.Range(0, 4);
@@ -123,7 +133,6 @@ public class RLBehaviour : MonoBehaviour
         return bestActions[UnityEngine.Random.Range(0, bestActions.Count)];
     }
 
-    // Action -> new pos
     (int, int, bool) ComputeMove(int action)
     {
         int nx = gridX;
@@ -148,17 +157,43 @@ public class RLBehaviour : MonoBehaviour
         return (nx, ny, true);
     }
 
-    float ComputeReward(int nx, int ny)
+    float ComputeReward(int nx, int ny, bool valid)
     {
-        // catch player?
+        float reward = 0f;
+
+        if (!valid)
+            return -0.2f;
+
+        // catch player
         if (nx == player.gridX && ny == player.gridY)
             return 10f;
 
-        // distance reward
+        // chase reward
         float oldDist = Mathf.Abs(gridX - player.gridX) + Mathf.Abs(gridY - player.gridY);
         float newDist = Mathf.Abs(nx - player.gridX) + Mathf.Abs(ny - player.gridY);
 
-        if (newDist < oldDist) return 0.1f;
-        else return -0.1f;
+        if (newDist < oldDist) reward += 0.1f;
+        else reward -= 0.1f;
+
+        // go toward exit
+        float oldExitDist = Manhattan(gridX, gridY, exitX, exitY);
+        float newExitDist = Manhattan(nx, ny, exitX, exitY);
+
+        if (newExitDist < oldExitDist) reward += 0.05f;
+
+        // blocking path
+        int distPE = Manhattan(player.gridX, player.gridY, exitX, exitY);
+        int distPA = Manhattan(player.gridX, player.gridY, nx, ny);
+        int distAE = Manhattan(nx, ny, exitX, exitY);
+
+        if (distPA + distAE == distPE)
+            reward += 0.2f;
+
+        return reward;
+    }
+
+    int Manhattan(int x1, int y1, int x2, int y2)
+    {
+        return Mathf.Abs(x1 - x2) + Mathf.Abs(y1 - y2);
     }
 }

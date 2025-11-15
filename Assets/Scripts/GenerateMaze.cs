@@ -300,7 +300,7 @@ public class GenerateMaze : MonoBehaviour
         Vector3 rlPosition = rooms[rlStart.x, rlStart.y].transform.position;
         rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
         RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
-        rl.Init(rooms, rlStart.x, rlStart.y);
+        rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, numY - 1);
     }
 
 
