@@ -52,9 +52,11 @@ public class RLBehaviour : MonoBehaviour
         this.startY = startY;
 
         targetPos = transform.position;
+        if (player == null)
+            player = UnityEngine.Object.FindFirstObjectByType<PlayerBehaviour>();
 
-        player = UnityEngine.Object.FindFirstObjectByType<PlayerBehaviour>();
 
+        Debug.Log($"RL Agent (re)initialized at ({startX}, {startY})");
     }
 
     void Update()
@@ -132,6 +134,10 @@ public class RLBehaviour : MonoBehaviour
         {
             catchCount++;
             Debug.Log($"caught player, total catches: {catchCount}/{episodeCount + 1}");
+
+            GenerateMaze maze = UnityEngine.Object.FindFirstObjectByType<GenerateMaze>();
+            if (maze != null)
+                maze.CheckGameEnd();
         }
 
         // decay exploration
@@ -244,13 +250,26 @@ public class RLBehaviour : MonoBehaviour
     {
         gridX = startX;
         gridY = startY;
-        transform.position = rooms[startX, startY].transform.position;
-        targetPos = transform.position;
+        // if (rooms != null && rooms.GetLength(0) > startX && rooms.GetLength(1) > startY)
+        // {
+        //     transform.position = rooms[startX, startY].transform.position;
+        // }
+
+        if (rooms != null && startX < rooms.GetLength(0) && startY < rooms.GetLength(1))
+        {
+            transform.position = rooms[startX, startY].transform.position;
+            targetPos = transform.position;
+        }
+
+        //targetPos = transform.position;
         
         currentSteps = 0;
         episodeCount++;
         isMoving = false;
         playerMoved = false;
+
+        Debug.Log($"Episode {episodeCount} starting. Epsilon: {epsilon:F3}, Q-size: {Q.Count}");
+
     }
 
     public float GetCatchRate()

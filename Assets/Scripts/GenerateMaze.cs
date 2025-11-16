@@ -84,6 +84,7 @@ public class GenerateMaze : MonoBehaviour
 
     private void Start()
     {
+        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
         GetRoomSize();
 
         rooms = new Room[numX, numY];
@@ -274,6 +275,10 @@ public class GenerateMaze : MonoBehaviour
     IEnumerator Coroutine_Generate()
     {
         generating = true;
+
+        if (rlObject != null)
+            rlObject.SetActive(false);
+
         bool flag = false;
         while (!flag)
         {
@@ -303,30 +308,49 @@ public class GenerateMaze : MonoBehaviour
         ai.Init(rooms, aiStart.x, aiStart.y);
 
 
-        Vector2Int rlStart = new Vector2Int(numX - 1, 0); // start in bottom right corner
-        Vector3 rlPosition = rooms[rlStart.x, rlStart.y].transform.position;
-        rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
-        //RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
-        rl = rlObject.GetComponent<RLBehaviour>();
-        rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, numY - 1);
+        //spawn rl only if it doesn't exit yet
+        if (rl == null || rlObject == null)
+        {
+            Vector2Int rlStart = new Vector2Int(numX - 1, 0); // start in bottom right corner
+            Vector3 rlPosition = rooms[rlStart.x, rlStart.y].transform.position;
+            rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
+            //RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
+            rl = rlObject.GetComponent<RLBehaviour>();
+            rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, numY - 1);
+        }
+        else
+        {
+            rl.rooms = rooms;
+            rl.Init(rooms, numX - 1, 0, numX - 1, numY - 1);
+        }
+
+        rlObject.SetActive(true);
         rl.ResetEpisode();
+        gameActive = true;
+        
+        
     }
 
     public void OnPlayerMoved()
     {
+        if (!gameActive) return;
+
         if (rl != null)
             rl.NotifyPlayerMoved();
         CheckGameEnd();
     }
 
-    void CheckGameEnd()
+    public void CheckGameEnd()
     {
         if (player == null || rl == null) return;
+
+        if(!gameActive) return;
 
         //if rl catch the player
         if (rl.gridX == player.gridX && rl.gridY == player.gridY)
         {
             Debug.Log("RL agent caught player");
+            gameActive = false;
             StartCoroutine(RestartGame());
             return;
         }
@@ -335,20 +359,21 @@ public class GenerateMaze : MonoBehaviour
         if (player.gridX == numX - 1 && player.gridY == numY - 1)
         {
             Debug.Log("player reached exit");
+            gameActive = false;
             StartCoroutine(RestartGame());
             return;
         }
 
     }
 
-    //restart after 2 seconds
+    //restart
     IEnumerator RestartGame()
     {
         yield return new WaitForSeconds(0.5f);
         if (aiObject != null)
             Destroy(aiObject);
-        if (rlObject != null)
-            Destroy(rlObject);
+        // if (rlObject != null)
+        //     Destroy(rlObject);
         if (player != null && player.gameObject != null)
             Destroy(player.gameObject);
         CreateMaze();
@@ -378,8 +403,8 @@ public class GenerateMaze : MonoBehaviour
             {
                 if (aiObject != null)
                     Destroy(aiObject);
-                if (rlObject != null)
-                    Destroy(rlObject);
+                // if (rlObject != null)
+                //     Destroy(rlObject);
 
 
                 CreateMaze();
