@@ -7,6 +7,8 @@ public class PlayerBehaviour : MonoBehaviour
     public int gridY;
     public Room[,] rooms;
 
+    public GenerateMaze mazegen;
+
     private bool isMoving = false;
     private Vector3 targetPosition;
 
@@ -60,6 +62,9 @@ public class PlayerBehaviour : MonoBehaviour
             gridY = newY;
             targetPosition = rooms[gridX, gridY].transform.position;
             isMoving = true;
+            UnityEngine.Object.FindFirstObjectByType<RLBehaviour>()?.NotifyPlayerMoved();
+            if (mazegen != null)
+                mazegen.OnPlayerMoved();
         }
     }
 
