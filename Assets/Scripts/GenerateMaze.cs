@@ -24,6 +24,8 @@ public class GenerateMaze : MonoBehaviour
     private GameObject rlObject;
 
     private PlayerBehaviour player;
+    private RLBehaviour rl;
+
 
     // The grid.
     Room[,] rooms = null;
@@ -41,6 +43,9 @@ public class GenerateMaze : MonoBehaviour
     Stack<Room> stack = new Stack<Room>();
 
     bool generating = false;
+
+    //track if game running
+    private bool gameActive = false;
 
     private void GetRoomSize()
     {
@@ -284,6 +289,8 @@ public class GenerateMaze : MonoBehaviour
 
         player.Init(rooms, 0, 0);
 
+        player.mazegen = this;
+
         //
 
         // if (aiObject!= null){
@@ -299,8 +306,52 @@ public class GenerateMaze : MonoBehaviour
         Vector2Int rlStart = new Vector2Int(numX - 1, 0); // start in bottom right corner
         Vector3 rlPosition = rooms[rlStart.x, rlStart.y].transform.position;
         rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
-        RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
+        //RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
+        rl = rlObject.GetComponent<RLBehaviour>();
         rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, numY - 1);
+        rl.ResetEpisode();
+    }
+
+    public void OnPlayerMoved()
+    {
+        if (rl != null)
+            rl.NotifyPlayerMoved();
+        CheckGameEnd();
+    }
+
+    void CheckGameEnd()
+    {
+        if (player == null || rl == null) return;
+
+        //if rl catch the player
+        if (rl.gridX == player.gridX && rl.gridY == player.gridY)
+        {
+            Debug.Log("RL agent caught player");
+            StartCoroutine(RestartGame());
+            return;
+        }
+
+        //if player reach the exit
+        if (player.gridX == numX - 1 && player.gridY == numY - 1)
+        {
+            Debug.Log("player reached exit");
+            StartCoroutine(RestartGame());
+            return;
+        }
+
+    }
+
+    //restart after 2 seconds
+    IEnumerator RestartGame()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (aiObject != null)
+            Destroy(aiObject);
+        if (rlObject != null)
+            Destroy(rlObject);
+        if (player != null && player.gameObject != null)
+            Destroy(player.gameObject);
+        CreateMaze();
     }
 
 
@@ -325,19 +376,30 @@ public class GenerateMaze : MonoBehaviour
         {
             if (!generating)
             {
+                if (aiObject != null)
+                    Destroy(aiObject);
+                if (rlObject != null)
+                    Destroy(rlObject);
+
+
                 CreateMaze();
             }
-
-            
-        if (aiObject!= null){
-            Destroy(aiObject);
         }
 
-        if(rlObject != null)
-            {
-                Destroy(rlObject);
-            }
+            
+        // if (aiObject!= null){
+        //     Destroy(aiObject);
+        // }
 
+        // if(rlObject != null)
+        //     {
+        //         Destroy(rlObject);
+        //     }
+
+        // }
+        if (Input.GetKeyDown(KeyCode.T) && rl != null)
+        {
+            Debug.Log(rl.GetStats());
         }
     }
 }

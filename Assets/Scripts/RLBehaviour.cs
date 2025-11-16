@@ -16,17 +16,30 @@ public class RLBehaviour : MonoBehaviour
     private bool isMoving = false;
 
     // Q-Learning hyperparameters
-    private float learningRate = 0.1f;
-    private float discount = 0.95f;
-    private float epsilon = 0.2f;
-    private float minEpsilon = 0.05f;
-    private float epsilonDecay = 0.999f;
+    [SerializeField] private float learningRate = 0.1f;
+    [SerializeField] private float discount = 0.95f;
+    [SerializeField] private float epsilon = 0.2f;
+    [SerializeField] private float minEpsilon = 0.05f;
+    [SerializeField] private float epsilonDecay = 0.999f;
+    [SerializeField] private int maxStepsPerEpisode = 100;
 
     // Q-Table
-    private Dictionary<(int, int, int, int, int, int), float[]> Q
-        = new Dictionary<(int, int, int, int, int, int), float[]>();
+    // private Dictionary<(int, int, int, int, int, int), float[]> Q
+    //     = new Dictionary<(int, int, int, int, int, int), float[]>();
+
+    private Dictionary<string, float[]> Q = new Dictionary<string, float[]>();
+
+
+    // episode tracking
+    // moves in current game
+    private int currentSteps = 0;
+    // no. of complete games
+    private int episodeCount = 0;
+    private int catchCount = 0;
 
     private PlayerBehaviour player;
+    private int startX, startY;
+    private bool playerMoved = false;
 
     public void Init(Room[,] rooms, int startX, int startY, int exitX, int exitY)
     {
@@ -35,6 +48,8 @@ public class RLBehaviour : MonoBehaviour
         this.gridY = startY;
         this.exitX = exitX;
         this.exitY = exitY;
+        this.startX = startX;
+        this.startY = startY;
 
         targetPos = transform.position;
 
@@ -68,7 +83,7 @@ public class RLBehaviour : MonoBehaviour
         TakeTurn();
     }
 
-    private bool playerMoved = false;
+    //private bool playerMoved = false;
     public void NotifyPlayerMoved()
     {
         playerMoved = true;
@@ -76,7 +91,10 @@ public class RLBehaviour : MonoBehaviour
 
     void TakeTurn()
     {
-        var state = GetState();
+        currentSteps++;
+
+        //var state = GetState();
+        string state = GetState();
 
         if (!Q.ContainsKey(state))
             Q[state] = new float[4]; // 4 actions
@@ -88,7 +106,8 @@ public class RLBehaviour : MonoBehaviour
         // calculate reward
         float reward = ComputeReward(nx, ny, valid);
 
-        var nextState = (player.gridX, player.gridY, nx, ny, exitX, exitY);
+        //var nextState = (player.gridX, player.gridY, nx, ny, exitX, exitY);
+        string nextState = GetNextState(nx, ny);
 
         if (!Q.ContainsKey(nextState))
             Q[nextState] = new float[4];
@@ -108,16 +127,40 @@ public class RLBehaviour : MonoBehaviour
             isMoving = true;
         }
 
+        //check if caught player
+        if (gridX == player.gridX && gridY == player.gridY)
+        {
+            catchCount++;
+            Debug.Log($"caught player, total catches: {catchCount}/{episodeCount + 1}");
+        }
+
         // decay exploration
         epsilon = Mathf.Max(minEpsilon, epsilon * epsilonDecay);
     }
 
-    (int, int, int, int, int, int) GetState()
+    //(int, int, int, int, int, int) GetState()
+    // {
+    //     return (player.gridX, player.gridY, gridX, gridY, exitX, exitY);
+    // }
+
+    string GetState()
     {
-        return (player.gridX, player.gridY, gridX, gridY, exitX, exitY);
+        int dx = Mathf.Clamp(player.gridX - gridX, -5, 5);
+        int dy = Mathf.Clamp(player.gridY - gridY, -5, 5);
+        return $"{dx},{dy}";
     }
 
-    int ChooseAction((int, int, int, int, int, int) state)
+    string GetNextState(int nx, int ny)
+    {
+        int dx = Mathf.Clamp(player.gridX - nx, -5, 5);
+        int dy = Mathf.Clamp(player.gridY - ny, -5, 5);
+        return $"{dx},{dy}";
+    }
+
+
+
+    //int ChooseAction((int, int, int, int, int, int) state)
+    int ChooseAction(string state)
     {
         if (UnityEngine.Random.value < epsilon)
             return UnityEngine.Random.Range(0, 4);
@@ -172,8 +215,8 @@ public class RLBehaviour : MonoBehaviour
         float oldDist = Mathf.Abs(gridX - player.gridX) + Mathf.Abs(gridY - player.gridY);
         float newDist = Mathf.Abs(nx - player.gridX) + Mathf.Abs(ny - player.gridY);
 
-        if (newDist < oldDist) reward += 0.1f;
-        else reward -= 0.1f;
+        if (newDist < oldDist) reward += 0.5f;
+        else reward -= 0.5f;
 
         // go toward exit
         float oldExitDist = Manhattan(gridX, gridY, exitX, exitY);
@@ -195,5 +238,29 @@ public class RLBehaviour : MonoBehaviour
     int Manhattan(int x1, int y1, int x2, int y2)
     {
         return Mathf.Abs(x1 - x2) + Mathf.Abs(y1 - y2);
+    }
+
+    public void ResetEpisode()
+    {
+        gridX = startX;
+        gridY = startY;
+        transform.position = rooms[startX, startY].transform.position;
+        targetPos = transform.position;
+        
+        currentSteps = 0;
+        episodeCount++;
+        isMoving = false;
+        playerMoved = false;
+    }
+
+    public float GetCatchRate()
+    {
+        if (episodeCount == 0) return 0f;
+        return (catchCount / (float)episodeCount) * 100f;
+    }
+
+    public string GetStats()
+    {
+        return $"Episodes: {episodeCount} | Catches: {catchCount} | Rate: {GetCatchRate():F1}% | Epsilon: {epsilon:F3} | Q-states: {Q.Count}";
     }
 }
