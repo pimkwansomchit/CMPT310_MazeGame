@@ -14,6 +14,7 @@ public class AIBehaviour : MonoBehaviour
 
     private bool isMoving = false;
     private Vector3 targetPosition;
+    private bool playerMoved = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -31,6 +32,9 @@ public class AIBehaviour : MonoBehaviour
         if (index >= path.Count){
             return;
         }
+
+        // if (!playerMoved) return;
+        // playerMoved = false;
         float distance = Vector2.Distance(transform.position, targetPosition);
         
         if (isMoving)
@@ -48,13 +52,22 @@ public class AIBehaviour : MonoBehaviour
             }
             return;
         }
+
+        if (!playerMoved) return;
+        playerMoved = false;
         if (index < path.Count){
             targetPosition = path[index].transform.position;
             isMoving = true;
+           // playerMoved = true;
 
 
         }
 
+    }
+
+    public void NotifyPlayerMoved()
+    {
+        playerMoved = true;
     }
 
     public void Init(Room[,] rooms, int startX, int startY){
@@ -66,9 +79,11 @@ public class AIBehaviour : MonoBehaviour
             index =0;
             // start at beginning of path
             transform.position = path[0]. transform.position;
+            gridX = path[0].Index.x;
+            gridY = path[0].Index.y;
             targetPosition = path[index].transform.position;
 
-            isMoving = true;
+            isMoving = false;
 
 
 

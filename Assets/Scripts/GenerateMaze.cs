@@ -21,6 +21,7 @@ public class GenerateMaze : MonoBehaviour
     GameObject RLPrefab;
 
     private GameObject aiObject;
+    private AIBehaviour ai;
     private GameObject rlObject;
 
     private PlayerBehaviour player;
@@ -304,7 +305,7 @@ public class GenerateMaze : MonoBehaviour
         Vector2Int aiStart = new Vector2Int(0,numY-1);
         Vector3 aiPosition = rooms[aiStart.x, aiStart.y].transform.position;
         aiObject = Instantiate(AIPrefab, aiPosition, Quaternion.identity);
-        AIBehaviour ai = aiObject.GetComponent<AIBehaviour>();
+        ai = aiObject.GetComponent<AIBehaviour>();
         ai.Init(rooms, aiStart.x, aiStart.y);
 
 
@@ -335,6 +336,8 @@ public class GenerateMaze : MonoBehaviour
     {
         if (!gameActive) return;
 
+        if (ai != null)
+            ai.NotifyPlayerMoved();
         if (rl != null)
             rl.NotifyPlayerMoved();
         CheckGameEnd();
