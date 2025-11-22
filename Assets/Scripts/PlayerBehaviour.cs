@@ -63,6 +63,7 @@ public class PlayerBehaviour : MonoBehaviour
             targetPosition = rooms[gridX, gridY].transform.position;
             isMoving = true;
             UnityEngine.Object.FindFirstObjectByType<RLBehaviour>()?.NotifyPlayerMoved();
+            UnityEngine.Object.FindFirstObjectByType<AIBehaviour>()?.NotifyPlayerMoved();
             if (mazegen != null)
                 mazegen.OnPlayerMoved();
         }
@@ -104,5 +105,7 @@ public class PlayerBehaviour : MonoBehaviour
         this.gridX = startX;
         this.gridY = startY;
         targetPosition = transform.position;
+
+        mazegen = FindFirstObjectByType<GenerateMaze>();
     }
 }
