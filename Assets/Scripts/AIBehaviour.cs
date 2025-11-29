@@ -72,7 +72,7 @@ public class AIBehaviour : MonoBehaviour
 
     public void Init(Room[,] rooms, int startX, int startY){
         this.rooms = rooms;
-        path = AStar.FindPath(rooms, new Vector2Int(startX, startY), new Vector2Int(rooms.GetLength(0) - 1, rooms.GetLength(1) - 1));
+        path = AStar.FindPath(rooms, new Vector2Int(startX, startY), new Vector2Int(rooms.GetLength(0) - 1, rooms.GetLength(1) / 2));
 
         // a star returned something
         if (path!= null){

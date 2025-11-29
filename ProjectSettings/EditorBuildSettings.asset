@@ -14,6 +14,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/project.unity
     guid: 4c9f48d8d1b0162459981f3201a562b4
+  - enabled: 1
+    path: Assets/Scenes/Help.unity
+    guid: b7ca5f30b337c634f8a96a35b86bba3d
+  - enabled: 1
+    path: Assets/Scenes/win_scene.unity
+    guid: 8711353c566108b49a34c8da5210354f
+  - enabled: 1
+    path: Assets/Scenes/lose_scene.unity
+    guid: a58d1b20d927ab74599c1ca2e6f71c7c
+  - enabled: 1
+    path: Assets/Scenes/tie_scene.unity
+    guid: a2d90900b7f4dc0468e18a41d819c6f1
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

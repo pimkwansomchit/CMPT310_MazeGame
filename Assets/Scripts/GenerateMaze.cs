@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GenerateMaze : MonoBehaviour
 {
@@ -47,6 +48,10 @@ public class GenerateMaze : MonoBehaviour
 
     //track if game running
     private bool gameActive = false;
+
+    // Score tracking
+    public int playerScore = 0;
+    public int aiScore = 0;
 
     private void GetRoomSize()
     {
@@ -105,6 +110,16 @@ public class GenerateMaze : MonoBehaviour
         }
 
         SetCamera();
+
+        // Automatically generate maze on start after rooms are initialized
+        StartCoroutine(InitializeMaze());
+    }
+
+    IEnumerator InitializeMaze()
+    {
+        // Wait one frame to ensure all Room components are initialized
+        yield return null;
+        CreateMaze();
     }
 
     private void RemoveRoomWall(
@@ -265,7 +280,9 @@ public class GenerateMaze : MonoBehaviour
         Reset();
 
         RemoveRoomWall(0, 0, Room.Directions.BOTTOM);
-        RemoveRoomWall(numX - 1, numY - 1, Room.Directions.RIGHT);
+        // Exit in middle of right wall
+        int middleY = numY / 2;
+        RemoveRoomWall(numX - 1, middleY, Room.Directions.RIGHT);
 
         stack.Push(rooms[0, 0]);
 
@@ -302,7 +319,7 @@ public class GenerateMaze : MonoBehaviour
         // if (aiObject!= null){
         //     Destroy(aiObject);
         // }
-        Vector2Int aiStart = new Vector2Int(0,numY-1);
+        Vector2Int aiStart = new Vector2Int(0, numY - 1);
         Vector3 aiPosition = rooms[aiStart.x, aiStart.y].transform.position;
         aiObject = Instantiate(AIPrefab, aiPosition, Quaternion.identity);
         ai = aiObject.GetComponent<AIBehaviour>();
@@ -310,6 +327,7 @@ public class GenerateMaze : MonoBehaviour
 
 
         //spawn rl only if it doesn't exit yet
+        int exitY = numY / 2;
         if (rl == null || rlObject == null)
         {
             Vector2Int rlStart = new Vector2Int(numX - 1, 0); // start in bottom right corner
@@ -317,19 +335,19 @@ public class GenerateMaze : MonoBehaviour
             rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
             //RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
             rl = rlObject.GetComponent<RLBehaviour>();
-            rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, numY - 1);
+            rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, exitY);
         }
         else
         {
             rl.rooms = rooms;
-            rl.Init(rooms, numX - 1, 0, numX - 1, numY - 1);
+            rl.Init(rooms, numX - 1, 0, numX - 1, exitY);
         }
 
         rlObject.SetActive(true);
         rl.ResetEpisode();
         gameActive = true;
-        
-        
+
+
     }
 
     public void OnPlayerMoved()
@@ -343,25 +361,45 @@ public class GenerateMaze : MonoBehaviour
         CheckGameEnd();
     }
 
+    public void OnAIMoved()
+    {
+        if (!gameActive) return;
+        CheckGameEnd();
+    }
+
     public void CheckGameEnd()
     {
-        if (player == null || rl == null) return;
+        if (player == null || rl == null || ai == null) return;
 
-        if(!gameActive) return;
+        if (!gameActive) return;
+
+        int exitY = numY / 2;
 
         //if rl catch the player
         if (rl.gridX == player.gridX && rl.gridY == player.gridY)
         {
-            Debug.Log("RL agent caught player");
+            Debug.Log("RL agent caught player - Player loses a point");
+            playerScore--;
+            gameActive = false;
+            StartCoroutine(RestartGame());
+            return;
+        }
+
+        //if AI reaches the exit
+        if (ai.gridX == numX - 1 && ai.gridY == exitY)
+        {
+            Debug.Log("AI reached exit - AI scores a point");
+            aiScore++;
             gameActive = false;
             StartCoroutine(RestartGame());
             return;
         }
 
         //if player reach the exit
-        if (player.gridX == numX - 1 && player.gridY == numY - 1)
+        if (player.gridX == numX - 1 && player.gridY == exitY)
         {
-            Debug.Log("player reached exit");
+            Debug.Log("Player reached exit - Player scores a point");
+            playerScore++;
             gameActive = false;
             StartCoroutine(RestartGame());
             return;
@@ -397,34 +435,25 @@ public class GenerateMaze : MonoBehaviour
             }
         }
     }
+    public void EndGame()
+    {
+        if (playerScore > aiScore)
+        {
+            SceneManager.LoadScene("win_scene");
+        }
+        if(playerScore == aiScore)
+        {
+            SceneManager.LoadScene("tie_scene");
+        }
+        else
+        {
+            SceneManager.LoadScene("lose_scene");
+        }
+    }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (!generating)
-            {
-                if (aiObject != null)
-                    Destroy(aiObject);
-                // if (rlObject != null)
-                //     Destroy(rlObject);
-
-
-                CreateMaze();
-            }
-        }
-
-            
-        // if (aiObject!= null){
-        //     Destroy(aiObject);
-        // }
-
-        // if(rlObject != null)
-        //     {
-        //         Destroy(rlObject);
-        //     }
-
-        // }
+        // Print stats with T key
         if (Input.GetKeyDown(KeyCode.T) && rl != null)
         {
             Debug.Log(rl.GetStats());
