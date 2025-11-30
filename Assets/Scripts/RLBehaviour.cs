@@ -21,7 +21,7 @@ public class RLBehaviour : MonoBehaviour
     [SerializeField] private float epsilon = 0.2f;
     [SerializeField] private float minEpsilon = 0.05f;
     [SerializeField] private float epsilonDecay = 0.999f;
-    [SerializeField] private int maxStepsPerEpisode = 100;
+    [SerializeField] private int maxRetries = 10;
 
     // Q-Table
     // private Dictionary<(int, int, int, int, int, int), float[]> Q
@@ -101,12 +101,44 @@ public class RLBehaviour : MonoBehaviour
         if (!Q.ContainsKey(state))
             Q[state] = new float[4]; // 4 actions
 
-        int action = ChooseAction(state);
+        int action = -1;
+        int nx = gridX;
+        int ny = gridY;
+        int attempts = 0;
+        bool valid = false;
 
-        (int nx, int ny, bool valid) = ComputeMove(action);
+       //int action = ChooseAction(state);
+        while (!valid && attempts < maxRetries)
+        {
+            action = ChooseAction(state);
+            (nx, ny, valid) = ComputeMove(action);
+
+            if (!valid)
+            {
+                float wallPenalty = -0.2f;
+
+                string wallNextState = GetState();
+
+                if (!Q.ContainsKey(wallNextState))
+                    Q[wallNextState] = new float[4];
+
+                float wallOldQ = Q[state][action];
+                float wallMaxNext = Mathf.Max(Q[wallNextState]);
+
+                Q[state][action] = wallOldQ + learningRate * (wallPenalty + discount * wallMaxNext - wallOldQ);
+                attempts++;
+            }
+        }
+
+        if (!valid)
+        {
+            Debug.LogWarning($"RL Agent stuck at ({gridX}, {gridY}) after {maxRetries} attempts");
+            return;
+        }
+
 
         // calculate reward
-        float reward = ComputeReward(nx, ny, valid);
+        float reward = ComputeReward(nx, ny, true);
 
         //var nextState = (player.gridX, player.gridY, nx, ny, exitX, exitY);
         string nextState = GetNextState(nx, ny);
@@ -121,13 +153,12 @@ public class RLBehaviour : MonoBehaviour
         Q[state][action] = oldQ + learningRate * (reward + discount * maxNext - oldQ);
 
         // Perform move if valid
-        if (valid)
-        {
-            gridX = nx;
-            gridY = ny;
-            targetPos = rooms[nx, ny].transform.position;
-            isMoving = true;
-        }
+
+        gridX = nx;
+        gridY = ny;
+        targetPos = rooms[nx, ny].transform.position;
+        isMoving = true;
+
 
         //check if caught player
         if (gridX == player.gridX && gridY == player.gridY)
