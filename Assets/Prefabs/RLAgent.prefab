@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 4035959289877228764, guid: 3467dfa36eb7392439e7ea203b6e5087, type: 3}
+  m_Sprite: {fileID: 311313206353282233, guid: 85f32b7ceb8914e4d8ac6a2970e6098c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -102,7 +102,7 @@ Animator:
   m_GameObject: {fileID: 5210349372296813284}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: d0ee132b422312242b79e9470b966b70, type: 2}
+  m_Controller: {fileID: 9100000, guid: 58df8d741e64e7444811e4ab26f8ce18, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -126,6 +126,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9065a14e40009e246a490010df48085d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RLBehaviour
-  moveSpeed: 5
+  moveSpeed: 20
   gridX: 0
   gridY: 0
+  exitX: 0
+  exitY: 0
+  learningRate: 0.1
+  discount: 0.95
+  epsilon: 0.2
+  minEpsilon: 0.05
+  epsilonDecay: 0.999
+  maxStepsPerEpisode: 100
