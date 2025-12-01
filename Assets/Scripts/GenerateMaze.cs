@@ -314,11 +314,6 @@ public class GenerateMaze : MonoBehaviour
 
         player.mazegen = this;
 
-        //
-
-        // if (aiObject!= null){
-        //     Destroy(aiObject);
-        // }
         Vector2Int aiStart = new Vector2Int(0, numY - 1);
         Vector3 aiPosition = rooms[aiStart.x, aiStart.y].transform.position;
         aiObject = Instantiate(AIPrefab, aiPosition, Quaternion.identity);
@@ -333,7 +328,6 @@ public class GenerateMaze : MonoBehaviour
             Vector2Int rlStart = new Vector2Int(numX - 1, 0); // start in bottom right corner
             Vector3 rlPosition = rooms[rlStart.x, rlStart.y].transform.position;
             rlObject = Instantiate(RLPrefab, rlPosition, Quaternion.identity);
-            //RLBehaviour rl = rlObject.GetComponent<RLBehaviour>();
             rl = rlObject.GetComponent<RLBehaviour>();
             rl.Init(rooms, rlStart.x, rlStart.y, numX - 1, exitY);
         }
@@ -413,8 +407,6 @@ public class GenerateMaze : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         if (aiObject != null)
             Destroy(aiObject);
-        // if (rlObject != null)
-        //     Destroy(rlObject);
         if (player != null && player.gameObject != null)
             Destroy(player.gameObject);
         CreateMaze();
@@ -441,7 +433,7 @@ public class GenerateMaze : MonoBehaviour
         {
             SceneManager.LoadScene("win_scene");
         }
-        if(playerScore == aiScore)
+        else if(playerScore == aiScore)
         {
             SceneManager.LoadScene("tie_scene");
         }
@@ -453,7 +445,7 @@ public class GenerateMaze : MonoBehaviour
 
     private void Update()
     {
-        // Print stats with T key
+    
         if (Input.GetKeyDown(KeyCode.T) && rl != null)
         {
             Debug.Log(rl.GetStats());

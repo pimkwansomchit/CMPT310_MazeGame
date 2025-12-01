@@ -1,11 +1,10 @@
 using UnityEngine;
-using TMPro; // Use this if using TextMeshPro
-// using UnityEngine.UI; // Use this if using legacy Text
+using TMPro; 
 
 public class ScoreDisplay : MonoBehaviour
 {
     public GenerateMaze mazeGenerator;
-    public TextMeshProUGUI scoreText; // Or: public Text scoreText; for legacy
+    public TextMeshProUGUI scoreText; 
 
     void Update()
     {
